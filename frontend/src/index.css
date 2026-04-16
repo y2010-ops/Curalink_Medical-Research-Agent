@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "DM Sans", system-ui, sans-serif;
+  background: #0d221c;
+  color: #eef7f4;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #25705a;
+  border-radius: 3px;
+}
+
+/* Markdown content styling */
+.markdown-content h2 {
+  font-family: "Fraunces", serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #7bc4ac;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #afdccc;
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.markdown-content p {
+  margin-bottom: 0.65rem;
+  line-height: 1.7;
+  color: #d5ede4;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-left: 1.25rem;
+  margin-bottom: 0.65rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.3rem;
+  line-height: 1.6;
+  color: #d5ede4;
+}
+
+.markdown-content strong {
+  color: #eef7f4;
+  font-weight: 600;
+}
+
+.markdown-content a {
+  color: #4ba78a;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.markdown-content a:hover {
+  color: #7bc4ac;
+}
+
+/* Typing indicator */
+@keyframes pulse-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.typing-dot {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Slide-in animation for messages */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-enter {
+  animation: slide-up 0.3s ease-out;
+}
