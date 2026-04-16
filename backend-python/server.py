@@ -374,7 +374,7 @@ async def chat_stream(request: ChatRequest):
 async def clear_conversation(session_id: str):
     """Clear conversation history for a session."""
     db = get_db()
-    if db:
+    if db is not None:
         db.conversations.delete_one({"session_id": session_id})
     # Clear relevant cache entries
     keys_to_remove = [k for k in _cache if True]  # Clear all for simplicity
