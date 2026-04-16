@@ -1,3 +1,12 @@
+---
+title: Medical Research Backend
+emoji: ⚕️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # Curalink — AI Medical Research Assistant
 
 An **agentic RAG** (Retrieval-Augmented Generation) system that fetches, ranks, and synthesizes medical research from PubMed, OpenAlex, and ClinicalTrials.gov using a LangGraph pipeline powered by open-source LLMs via Groq.
