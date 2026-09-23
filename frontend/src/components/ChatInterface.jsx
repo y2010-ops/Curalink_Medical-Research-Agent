@@ -13,6 +13,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { sendMessage, clearSession, streamMessage } from "../utils/api.js";
 import SourceCard from "./SourceCard.jsx";
 import PipelineProgress from "./PipelineProgress.jsx";
@@ -314,7 +315,7 @@ function MessageBubble({ message }) {
             <p className="text-sm leading-relaxed">{message.content}</p>
           ) : (
             <div className="markdown-content text-sm">
-              <ReactMarkdown>{message.content}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
             </div>
           )}
         </div>
