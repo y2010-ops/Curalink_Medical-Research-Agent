@@ -499,6 +499,25 @@ def get_synthesis_llm() -> ChatGroq:
     return _synth_llm
 
 
+
+# Models sometimes emit typographic lookalikes that break the frontend's
+# plain-markdown renderer. Normalize them deterministically; the prompt asks
+# for the right characters but cannot guarantee them.
+_NORMALIZE = {
+    "【": "[", "】": "]",   # CJK lenticular brackets around citations
+    "‑": "-",                  # non-breaking hyphen
+    " ": " ",                  # narrow no-break space
+    " ": " ",                  # no-break space
+}
+
+
+def normalize_output(text: str) -> str:
+    """Map typographic lookalikes back to the ASCII the frontend expects."""
+    for bad, good in _NORMALIZE.items():
+        text = text.replace(bad, good)
+    return text
+
+
 # ── Node 1: Router Agent (PATCHED) ────────────────────────────────────────
 
 RECENCY_KEYWORDS = {
@@ -689,8 +708,9 @@ IMPORTANT RULES:
 3. TONE & COMPLEXITY: Strike a balance. Be human-like, warm, and understandable, but maintain medical accuracy. Do not be overly layman, but DO explain extremely complex statistical jargon and avoid raw mathematical formulas.
 4. CONTEXT & PERSONALIZATION: Actively use the "Previous conversation" memory and the "Disease context" to tailor your response specifically to the user's ongoing situation. Make it flow naturally.
 5. HONESTY: If information is insufficient, say so honestly rather than making things up.
-6. STRUCTURING: Use clear sections.
-7. DISCLAIMER: Include a brief disclaimer that this is for research purposes, not medical advice."""
+6. STRUCTURING: Use clear sections with bold headings, short paragraphs and "-" bullet lists.
+7. FORMATTING: NEVER use markdown tables or pipe characters for layout. The renderer does not support them. Use bullet lists instead. Write citations as plain ASCII square brackets, e.g. [1] or [T1], never any other bracket style. Use ordinary ASCII hyphens and spaces only.
+8. DISCLAIMER: Include a brief disclaimer that this is for research purposes, not medical advice."""
 
     user_prompt = f"""Disease context: {disease}
 Current question: {user_msg}
@@ -719,7 +739,7 @@ Remember: Blend scientific accuracy with accessible language. Only state what th
         ])
 
         state["response"] = {
-            "content": response.content,
+            "content": normalize_output(response.content),
             "publications": pubs[:8],
             "trials": trials[:6],
             "sources_count": len(pubs) + len(trials),
@@ -813,7 +833,7 @@ User: {state["user_message"]}"""
     try:
         response = await llm.ainvoke([HumanMessage(content=prompt)])
         state["response"] = {
-            "content": response.content,
+            "content": normalize_output(response.content),
             "publications": [],
             "trials": [],
             "sources_count": 0,
@@ -854,7 +874,7 @@ Provide a concise, helpful summary of the health topics and research discussed."
     try:
         response = await llm.ainvoke([HumanMessage(content=prompt)])
         state["response"] = {
-            "content": response.content,
+            "content": normalize_output(response.content),
             "publications": [],
             "trials": [],
             "sources_count": 0,
