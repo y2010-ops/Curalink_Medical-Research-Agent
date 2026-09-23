@@ -38,7 +38,7 @@
 #     global _fast_llm
 #     if _fast_llm is None:
 #         _fast_llm = ChatGroq(
-#             model=os.getenv("FAST_MODEL", "llama-3.1-8b-instant"),
+#             model=os.getenv("FAST_MODEL", "openai/gpt-oss-20b"),
 #             temperature=0.1,
 #             max_tokens=1024,
 #         )
@@ -50,7 +50,7 @@
 #     global _synth_llm
 #     if _synth_llm is None:
 #         _synth_llm = ChatGroq(
-#             model=os.getenv("SYNTHESIS_MODEL", "llama-3.3-70b-versatile"),
+#             model=os.getenv("SYNTHESIS_MODEL", "openai/gpt-oss-120b"),
 #             temperature=0.2,
 #             max_tokens=4096,
 #         )
@@ -481,7 +481,7 @@ def get_fast_llm() -> ChatGroq:
     global _fast_llm
     if _fast_llm is None:
         _fast_llm = ChatGroq(
-            model=os.getenv("FAST_MODEL", "llama-3.1-8b-instant"),
+            model=os.getenv("FAST_MODEL", "openai/gpt-oss-20b"),
             temperature=0.1,
             max_tokens=1024,
         )
@@ -492,7 +492,7 @@ def get_synthesis_llm() -> ChatGroq:
     global _synth_llm
     if _synth_llm is None:
         _synth_llm = ChatGroq(
-            model=os.getenv("SYNTHESIS_MODEL", "llama-3.3-70b-versatile"),
+            model=os.getenv("SYNTHESIS_MODEL", "openai/gpt-oss-120b"),
             temperature=0.2,
             max_tokens=4096,
         )
@@ -546,13 +546,14 @@ Location: {state.get("location", "")}
 
 Respond with this exact JSON structure:
 {{
-    "query_type": "medical_query" or "follow_up" or "casual",
+    "query_type": "medical_query" or "follow_up" or "casual" or "summary",
     "disease": "the primary disease/condition (extracted or from context)",
     "expanded_queries": ["query1 combining disease + intent", "query2 alternative phrasing", "query3 broader related terms"],
     "intent": "brief description of what the user wants to know"
 }}
 
 Rules:
+- If the user asks to summarize the conversation or chat, query_type is "summary"
 - If the user mentions a disease or treatment, query_type is "medical_query"
 - If the user asks a follow-up without specifying a new disease, query_type is "follow_up" and use disease from history
 - If it's greeting/casual, query_type is "casual"
@@ -823,6 +824,46 @@ User: {state["user_message"]}"""
             "publications": [],
             "trials": [],
             "sources_count": 0,
+        }
+    return state
+
+
+# ── Summary Request Node ──────────────────────────────────────────────────
+
+async def summary_node(state: AgentState) -> AgentState:
+    """Handle requests to summarize the conversation history without full RAG."""
+    llm = get_fast_llm()
+    history = state.get("conversation_history", [])
+    
+    if not history:
+        state["response"] = {
+            "content": "There's no conversation history to summarize yet. How can I help you today?",
+            "publications": [], "trials": [], "sources_count": 0
+        }
+        return state
+
+    history_text = "\n".join(f"{msg['role']}: {msg['content'][:200]}" for msg in history)
+    
+    prompt = f"""You are Curalink. The user asked for a summary of the conversation.
+    
+Conversation:
+{history_text}
+
+Provide a concise, helpful summary of the health topics and research discussed."""
+    
+    try:
+        response = await llm.ainvoke([HumanMessage(content=prompt)])
+        state["response"] = {
+            "content": response.content,
+            "publications": [],
+            "trials": [],
+            "sources_count": 0,
+        }
+    except Exception as e:
+        print(f"[Summary] Failed: {e}")
+        state["response"] = {
+            "content": "I couldn't generate a summary right now.",
+            "publications": [], "trials": [], "sources_count": 0,
         }
     return state
 
